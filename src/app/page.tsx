@@ -104,10 +104,26 @@ export default function AuthPage() {
 
       // The redirect is handled by the AuthProvider
     } catch (error: any) {
-        let message = "An unknown error occurred.";
-        if (error.code === 'auth/email-already-in-use') {
-            message = "This email address is already in use.";
+        let message = "An unknown error occurred. Please check your network connection and try again.";
+        
+        switch(error.code) {
+            case 'auth/email-already-in-use':
+                message = "This email address is already in use by another account.";
+                break;
+            case 'auth/weak-password':
+                message = "The password is too weak. Please use a stronger password.";
+                break;
+            case 'auth/invalid-email':
+                message = "The email address is not valid.";
+                break;
+            case 'permission-denied':
+                message = "Permission Denied: Could not create user profile. Please update your Firebase Security Rules to allow new users to be created in the 'users' collection. For development, a rule like `allow write: if request.auth != null;` is a good starting point.";
+                break;
+            default:
+                console.error("SignUp Error:", error);
+                break;
         }
+
       toast({
         variant: "destructive",
         title: "Sign Up Failed",
