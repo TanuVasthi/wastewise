@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -9,11 +8,10 @@ import type { WasteRecord } from "@/lib/data";
 import { KpiCard } from "@/components/dashboard/kpi-card";
 import { WasteOverTimeChart } from "@/components/dashboard/waste-over-time-chart";
 import { WasteByTypeChart } from "@/components/dashboard/waste-by-type-chart";
-import { AiSuggestions } from "@/components/dashboard/ai-suggestions";
 import { ZoneTrendsChart } from "@/components/dashboard/zone-trends-chart";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { Trash2, Scale, Truck, AlertTriangle } from "lucide-react";
+import { Trash2, Scale, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { isSameDay, subDays, subMonths } from "date-fns";
 
@@ -74,8 +72,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Skeleton className="h-[105px]" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
           <Skeleton className="h-[105px]" />
           <Skeleton className="h-[105px]" />
         </div>
@@ -85,9 +82,6 @@ export default function DashboardPage() {
         </div>
         <div className="grid grid-cols-1 gap-6">
            <Skeleton className="h-[380px]" />
-        </div>
-         <div className="grid grid-cols-1 gap-6">
-           <Skeleton className="h-[250px]" />
         </div>
       </div>
     )
@@ -105,7 +99,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
         <KpiCard
           title="Total Collected Today"
           value={`${(totalCollectedToday / 1000).toFixed(2)} Tons`}
@@ -118,12 +112,6 @@ export default function DashboardPage() {
           description="Based on the last 30 days"
           Icon={Scale}
         />
-        <KpiCard
-          title="Missed Pickups"
-          value="0"
-          description="Feature coming soon"
-          Icon={Truck}
-        />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -133,10 +121,6 @@ export default function DashboardPage() {
       
       <div className="grid grid-cols-1 gap-6">
         <ZoneTrendsChart records={wasteRecords} />
-      </div>
-
-      <div className="grid grid-cols-1 gap-6">
-        <AiSuggestions records={wasteRecords} />
       </div>
     </div>
   );
