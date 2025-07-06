@@ -1,6 +1,6 @@
 "use client"
 
-import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts"
+import { Line, LineChart, XAxis, YAxis, Tooltip, Legend } from "recharts"
 import {
     Card,
     CardContent,
@@ -8,7 +8,7 @@ import {
     CardHeader,
     CardTitle,
   } from "@/components/ui/card"
-import { ChartTooltipContent } from "@/components/ui/chart"
+import { ChartContainer, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
   
   const data = [
     { name: 'Jan', "Zone A": 400, "Zone B": 240, "Zone C": 180 },
@@ -19,6 +19,21 @@ import { ChartTooltipContent } from "@/components/ui/chart"
     { name: 'Jun', "Zone A": 239, "Zone B": 380, "Zone C": 250 },
   ]
   
+  const chartConfig = {
+    "Zone A": {
+      label: "Zone A",
+      color: "hsl(var(--chart-1))",
+    },
+    "Zone B": {
+      label: "Zone B",
+      color: "hsl(var(--chart-2))",
+    },
+    "Zone C": {
+      label: "Zone C",
+      color: "hsl(var(--chart-3))",
+    },
+  } satisfies ChartConfig;
+
   export function ZoneTrendsChart() {
     return (
         <Card>
@@ -27,7 +42,7 @@ import { ChartTooltipContent } from "@/components/ui/chart"
           <CardDescription>Last 6 Months</CardDescription>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
+          <ChartContainer config={chartConfig} className="h-[300px]">
             <LineChart data={data}>
               <XAxis
                 dataKey="name"
@@ -45,11 +60,11 @@ import { ChartTooltipContent } from "@/components/ui/chart"
               />
               <Tooltip content={<ChartTooltipContent />} />
               <Legend />
-              <Line type="monotone" dataKey="Zone A" stroke="hsl(var(--chart-1))" />
-              <Line type="monotone" dataKey="Zone B" stroke="hsl(var(--chart-2))" />
-              <Line type="monotone" dataKey="Zone C" stroke="hsl(var(--chart-3))" />
+              <Line type="monotone" dataKey="Zone A" stroke="var(--color-Zone A)" />
+              <Line type="monotone" dataKey="Zone B" stroke="var(--color-Zone B)" />
+              <Line type="monotone" dataKey="Zone C" stroke="var(--color-Zone C)" />
             </LineChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         </CardContent>
       </Card>
     )

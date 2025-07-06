@@ -1,6 +1,7 @@
 "use client";
 
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
+import { useState, useEffect } from "react";
+import { Bar, BarChart, XAxis, YAxis, Tooltip } from "recharts";
 import {
   Card,
   CardContent,
@@ -8,19 +9,38 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ChartTooltipContent } from "@/components/ui/chart";
+import { ChartContainer, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 
-const data = [
-  { date: "Mon", total: Math.floor(Math.random() * 200) + 100 },
-  { date: "Tue", total: Math.floor(Math.random() * 200) + 100 },
-  { date: "Wed", total: Math.floor(Math.random() * 200) + 100 },
-  { date: "Thu", total: Math.floor(Math.random() * 200) + 100 },
-  { date: "Fri", total: Math.floor(Math.random() * 200) + 100 },
-  { date: "Sat", total: Math.floor(Math.random() * 200) + 100 },
-  { date: "Sun", total: Math.floor(Math.random() * 200) + 100 },
-];
+const chartConfig = {
+  total: {
+    label: "Total (kg)",
+    color: "hsl(var(--primary))",
+  },
+} satisfies ChartConfig;
 
 export function WasteOverTimeChart() {
+  const [data, setData] = useState([
+    { date: "Mon", total: 0 },
+    { date: "Tue", total: 0 },
+    { date: "Wed", total: 0 },
+    { date: "Thu", total: 0 },
+    { date: "Fri", total: 0 },
+    { date: "Sat", total: 0 },
+    { date: "Sun", total: 0 },
+  ]);
+
+  useEffect(() => {
+    setData([
+      { date: "Mon", total: Math.floor(Math.random() * 200) + 100 },
+      { date: "Tue", total: Math.floor(Math.random() * 200) + 100 },
+      { date: "Wed", total: Math.floor(Math.random() * 200) + 100 },
+      { date: "Thu", total: Math.floor(Math.random() * 200) + 100 },
+      { date: "Fri", total: Math.floor(Math.random() * 200) + 100 },
+      { date: "Sat", total: Math.floor(Math.random() * 200) + 100 },
+      { date: "Sun", total: Math.floor(Math.random() * 200) + 100 },
+    ]);
+  }, []);
+
   return (
     <Card>
       <CardHeader>
@@ -28,7 +48,7 @@ export function WasteOverTimeChart() {
         <CardDescription>Last 7 Days</CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
+        <ChartContainer config={chartConfig} className="h-[300px]">
           <BarChart data={data}>
             <XAxis
               dataKey="date"
@@ -45,9 +65,9 @@ export function WasteOverTimeChart() {
               tickFormatter={(value) => `${value} kg`}
             />
              <Tooltip cursor={{ fill: 'hsla(var(--muted))' }} content={<ChartTooltipContent />} />
-            <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="total" fill="var(--color-total)" radius={[4, 4, 0, 0]} />
           </BarChart>
-        </ResponsiveContainer>
+        </ChartContainer>
       </CardContent>
     </Card>
   );

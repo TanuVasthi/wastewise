@@ -1,6 +1,6 @@
 "use client";
 
-import { Pie, PieChart, ResponsiveContainer, Cell, Tooltip, Legend } from "recharts";
+import { Pie, PieChart, Cell, Tooltip, Legend } from "recharts";
 import {
   Card,
   CardContent,
@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ChartTooltipContent } from "@/components/ui/chart";
+import { ChartContainer, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 
 const data = [
   { name: "Organic", value: 400, color: "hsl(var(--chart-1))" },
@@ -18,6 +18,33 @@ const data = [
   { name: "Other", value: 150, color: "hsl(var(--chart-5))" },
 ];
 
+const chartConfig = {
+  value: {
+    label: "Kilograms",
+  },
+  Organic: {
+    label: "Organic",
+    color: "hsl(var(--chart-1))",
+  },
+  Plastic: {
+    label: "Plastic",
+    color: "hsl(var(--chart-2))",
+  },
+  Paper: {
+    label: "Paper",
+    color: "hsl(var(--chart-3))",
+  },
+  "E-Waste": {
+    label: "E-Waste",
+    color: "hsl(var(--chart-4))",
+  },
+  Other: {
+    label: "Other",
+    color: "hsl(var(--chart-5))",
+  },
+} satisfies ChartConfig;
+
+
 export function WasteByTypeChart() {
   return (
     <Card>
@@ -26,9 +53,9 @@ export function WasteByTypeChart() {
         <CardDescription>Current Month</CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
+        <ChartContainer config={chartConfig} className="h-[300px]">
           <PieChart>
-            <Tooltip content={<ChartTooltipContent />} />
+            <Tooltip content={<ChartTooltipContent hideLabel />} />
             <Legend />
             <Pie
               data={data}
@@ -44,7 +71,7 @@ export function WasteByTypeChart() {
               ))}
             </Pie>
           </PieChart>
-        </ResponsiveContainer>
+        </ChartContainer>
       </CardContent>
     </Card>
   );
