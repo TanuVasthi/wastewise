@@ -22,7 +22,7 @@ import { ChartContainer, ChartTooltipContent, type ChartConfig } from "@/compone
   const chartConfig = {
     "Zone A": {
       label: "Zone A",
-      color: "hsl(var(--chart-1))",
+      color: "hsl(var(--chart-4))",
     },
     "Zone B": {
       label: "Zone B",
