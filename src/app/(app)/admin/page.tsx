@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -15,18 +14,64 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { mockUsers, mockBins, type WasteRecord } from "@/lib/data";
-import { PlusCircle, FileDown, Trash2, AlertTriangle } from "lucide-react";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { mockBins, type WasteRecord, type User } from "@/lib/data";
+import { PlusCircle, FileDown, Trash2, AlertTriangle, Loader2 } from "lucide-react";
+import { collection, getDocs, query, orderBy, addDoc, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
 
+const addUserSchema = z.object({
+    name: z.string().min(2, "Name is required"),
+    email: z.string().email("Invalid email"),
+    role: z.enum(["Admin", "Data Collector"]),
+});
 
 export default function AdminPage() {
     const [wasteRecords, setWasteRecords] = useState<WasteRecord[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [users, setUsers] = useState<User[]>([]);
+    const [loadingUsers, setLoadingUsers] = useState(true);
+    const [addUserOpen, setAddUserOpen] = useState(false);
+    const { toast } = useToast();
+
+    const addUserForm = useForm<z.infer<typeof addUserSchema>>({
+        resolver: zodResolver(addUserSchema),
+        defaultValues: {
+            name: "",
+            email: "",
+            role: "Data Collector",
+        },
+    });
 
     useEffect(() => {
         const fetchWasteRecords = async () => {
@@ -55,6 +100,22 @@ export default function AdminPage() {
         };
     
         fetchWasteRecords();
+
+        const usersQuery = query(collection(db, "users"));
+        const unsubscribe = onSnapshot(usersQuery, (querySnapshot) => {
+            const usersData = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            } as User));
+            setUsers(usersData);
+            setLoadingUsers(false);
+        }, (err) => {
+            console.error(err);
+            setError("Failed to fetch user data. Check permissions for the 'users' collection.");
+            setLoadingUsers(false);
+        });
+
+        return () => unsubscribe();
       }, []);
 
     const handleExport = () => {
@@ -87,6 +148,24 @@ export default function AdminPage() {
         link.click();
         document.body.removeChild(link);
     }
+    
+    const onAddUserSubmit = async (values: z.infer<typeof addUserSchema>) => {
+        try {
+            await addDoc(collection(db, "users"), values);
+            toast({
+                title: "User Profile Added",
+                description: `${values.name} can now sign up with the email ${values.email}.`,
+            });
+            addUserForm.reset();
+            setAddUserOpen(false);
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Error adding user",
+                description: "Could not add user to the database. Check permissions and try again.",
+            });
+        }
+    };
 
   return (
     <div className="space-y-6">
@@ -102,12 +181,83 @@ export default function AdminPage() {
           <Card>
             <CardHeader>
               <CardTitle>Manage Users</CardTitle>
-              <CardDescription>Add, view, or remove users from the system.</CardDescription>
+              <CardDescription>View user profiles. New users must sign up themselves to create login credentials.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" /> Add User
-              </Button>
+               <Dialog open={addUserOpen} onOpenChange={setAddUserOpen}>
+                <DialogTrigger asChild>
+                    <Button>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Add User Profile
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Add New User Profile</DialogTitle>
+                        <DialogDescription>
+                           This creates a user profile. The person must still sign up using the same email to log in.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <Form {...addUserForm}>
+                        <form onSubmit={addUserForm.handleSubmit(onAddUserSubmit)} className="space-y-4 py-4">
+                             <FormField
+                                control={addUserForm.control}
+                                name="name"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Full Name</FormLabel>
+                                    <FormControl>
+                                    <Input placeholder="John Doe" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={addUserForm.control}
+                                name="email"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Email</FormLabel>
+                                    <FormControl>
+                                    <Input placeholder="john.doe@example.com" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={addUserForm.control}
+                                name="role"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Role</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                        <SelectValue placeholder="Select a role" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="Data Collector">Data Collector</SelectItem>
+                                        <SelectItem value="Admin">Admin</SelectItem>
+                                    </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <DialogFooter>
+                                <Button type="button" variant="ghost" onClick={() => setAddUserOpen(false)}>Cancel</Button>
+                                <Button type="submit" disabled={addUserForm.formState.isSubmitting}>
+                                    {addUserForm.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Add Profile
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </Form>
+                </DialogContent>
+                </Dialog>
+
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -118,18 +268,24 @@ export default function AdminPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {mockUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.name}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>{user.role}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="icon">
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {loadingUsers ? (
+                    <TableRow><TableCell colSpan={4} className="h-24 text-center">Loading users...</TableCell></TableRow>
+                  ) : users.length > 0 ? (
+                    users.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.name}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>{user.role}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="icon" disabled title="Delete user functionality coming soon">
+                              <Trash2 className="h-4 w-4 text-destructive/50" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow><TableCell colSpan={4} className="h-24 text-center">No users found.</TableCell></TableRow>
+                  )}
                 </TableBody>
               </Table>
             </CardContent>

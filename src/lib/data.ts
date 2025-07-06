@@ -37,12 +37,6 @@ export const mockWasteRecords: WasteRecord[] = [
   { id: '8', wasteType: 'Metal', quantity: 25, location: 'Zone C', date: new Date('2024-07-23T12:30:00Z'), collectorId: 'C003' },
 ];
 
-export const mockUsers: User[] = [
-    { id: '1', name: 'Admin User', role: 'Admin', email: 'admin@wastewise.com' },
-    { id: '2', name: 'John Doe', role: 'Data Collector', email: 'john.doe@wastewise.com' },
-    { id: '3', name: 'Jane Smith', role: 'Data Collector', email: 'jane.smith@wastewise.com' },
-];
-
 export const mockBins: Bin[] = [
     { id: 'B001', location: 'Zone A - Market', capacity: 1000, lastEmptied: new Date('2024-07-22T06:00:00Z')},
     { id: 'B002', location: 'Zone B - Park', capacity: 500, lastEmptied: new Date('2024-07-23T07:00:00Z')},
