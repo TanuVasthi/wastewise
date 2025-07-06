@@ -41,7 +41,7 @@ const formSchema = z.object({
   quantity: z.coerce
     .number({ required_error: "Please enter a quantity." })
     .positive({ message: "Quantity must be positive." }),
-  location: z.string({ required_error: "Please select a location." }),
+  location: z.string({ required_error: "Please select a location." }).min(1, "Please select a location."),
   date: z.date({
     required_error: "A date of collection is required.",
   }),
@@ -54,6 +54,9 @@ export function DataEntryForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      wasteType: "",
+      quantity: "",
+      location: "",
       collectorId: "C001", // Should be dynamically set in a real app
       truckId: "",
     },
@@ -85,7 +88,7 @@ export function DataEntryForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Waste Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a waste type" />
@@ -122,7 +125,7 @@ export function DataEntryForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Location (Zone/Ward)</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a location" />
