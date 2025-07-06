@@ -72,10 +72,8 @@ export function DataEntryForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
-    console.log("Attempting to submit the following data to Firestore:", values);
     try {
-      const docRef = await addDoc(collection(db, "waste-records"), values);
-      console.log("Document successfully written with ID:", docRef.id);
+      await addDoc(collection(db, "waste-records"), values);
       
       toast({
         title: "Success!",
@@ -83,37 +81,22 @@ export function DataEntryForm() {
       });
 
       form.reset(defaultFormValues);
-      // A manual reset of the date is needed if default value is new Date()
-      // to ensure the form field updates visually.
       form.setValue('date', new Date());
 
     } catch (error) {
-      console.error("Firebase write error details:", error);
+      console.error("Firebase write error:", error);
       
-      let title = "Error Saving Record";
-      let description = "An unexpected error occurred. Please check the browser console for more details.";
-
+      let description = "An unexpected error occurred. Please try again.";
       if (error instanceof Error && 'code' in error) {
-        const firebaseError = error as { code: string; message: string };
-        switch (firebaseError.code) {
-          case 'permission-denied':
-            title = "Permission Denied";
-            description = "Submission failed. Please check your Firestore security rules to allow write access to the 'waste-records' collection.";
-            break;
-          case 'unavailable':
-            title = "Service Unavailable";
-            description = "The service is currently unavailable. Please check your network connection and try again.";
-            break;
-          default:
-            title = `Error: ${firebaseError.code}`;
-            description = firebaseError.message;
-            break;
+        const firebaseError = error as { code: string };
+        if (firebaseError.code === 'permission-denied') {
+            description = "Submission failed. Please check your Firestore security rules to allow write access."
         }
       }
       
       toast({
         variant: "destructive",
-        title: title,
+        title: "Error Saving Record",
         description: description,
       });
     } finally {
