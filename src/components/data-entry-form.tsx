@@ -51,42 +51,69 @@ const formSchema = z.object({
   truckId: z.string().optional(),
 });
 
+const defaultFormValues = {
+    wasteType: undefined,
+    quantity: undefined,
+    location: undefined,
+    date: new Date(),
+    collectorId: "C001", // Should be dynamically set in a real app
+    truckId: "",
+};
+
+
 export function DataEntryForm() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      wasteType: undefined,
-      quantity: undefined,
-      location: undefined,
-      date: new Date(),
-      collectorId: "C001", // Should be dynamically set in a real app
-      truckId: "",
-    },
+    defaultValues: defaultFormValues,
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
+    console.log("Attempting to submit the following data to Firestore:", values);
     try {
-      await addDoc(collection(db, "waste-records"), values);
+      const docRef = await addDoc(collection(db, "waste-records"), values);
+      console.log("Document successfully written with ID:", docRef.id);
       
       toast({
         title: "Success!",
-        description: "Waste collection record has been saved to Firebase.",
-        className: "bg-primary text-primary-foreground",
+        description: "Waste collection record has been saved.",
       });
-      form.reset();
-    } catch (error: any) {
-      console.error("Error adding document: ", error);
-      let description = "Failed to save record. Please make sure your Firebase project is set up correctly.";
-      if (error.code === 'permission-denied') {
-          description = "Failed to save record. Please check your Firestore security rules to allow write access."
+
+      form.reset(defaultFormValues);
+      // A manual reset of the date is needed if default value is new Date()
+      // to ensure the form field updates visually.
+      form.setValue('date', new Date());
+
+    } catch (error) {
+      console.error("Firebase write error details:", error);
+      
+      let title = "Error Saving Record";
+      let description = "An unexpected error occurred. Please check the browser console for more details.";
+
+      if (error instanceof Error && 'code' in error) {
+        const firebaseError = error as { code: string; message: string };
+        switch (firebaseError.code) {
+          case 'permission-denied':
+            title = "Permission Denied";
+            description = "Submission failed. Please check your Firestore security rules to allow write access to the 'waste-records' collection.";
+            break;
+          case 'unavailable':
+            title = "Service Unavailable";
+            description = "The service is currently unavailable. Please check your network connection and try again.";
+            break;
+          default:
+            title = `Error: ${firebaseError.code}`;
+            description = firebaseError.message;
+            break;
+        }
       }
+      
       toast({
         variant: "destructive",
-        title: "Error",
+        title: title,
         description: description,
       });
     } finally {
@@ -151,7 +178,7 @@ export function DataEntryForm() {
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a location" />
-                        </SelectTrigger>
+                        </Trigger>
                       </FormControl>
                       <SelectContent>
                         {locations.map((loc) => (
