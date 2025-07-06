@@ -85,12 +85,16 @@ export function DataEntryForm() {
         collectorId: "C001",
         truckId: "",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adding document: ", error);
+      let description = "Failed to save record. Please make sure your Firebase project is set up correctly.";
+      if (error.code === 'permission-denied') {
+          description = "Failed to save record. Please check your Firestore security rules to allow write access."
+      }
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to save record. Please make sure your Firebase keys in .env are correct.",
+        description: description,
       });
     } finally {
       setIsSubmitting(false);
