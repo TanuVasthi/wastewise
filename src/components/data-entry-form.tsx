@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -97,7 +98,7 @@ export function DataEntryForm() {
         const firebaseError = error as { code: string };
         if (firebaseError.code === "permission-denied") {
           description =
-            "Submission failed. Please check your Firestore security rules to allow write access.";
+            "Permission Denied: Could not save data. Please go to your Firebase project's Firestore settings and update your Security Rules to allow write access to the 'waste-records' collection.";
         }
       }
 

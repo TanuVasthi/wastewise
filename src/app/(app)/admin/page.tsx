@@ -44,7 +44,11 @@ export default function AdminPage() {
             setWasteRecords(records);
           } catch (err: any) {
             console.error(err);
-            setError("Failed to fetch waste data. Please ensure your Firebase project is set up correctly and you have permission to read the data.");
+            if (err.code === 'permission-denied') {
+              setError("Permission Denied: Could not fetch data. Please go to your Firebase project's Firestore settings and update your Security Rules to allow read access to the 'waste-records' collection. For development, you can start with `allow read, write: if true;`, but be sure to secure your data for production.");
+            } else {
+              setError("Failed to fetch waste data. Please ensure your Firebase project is set up correctly.");
+            }
           } finally {
             setLoading(false);
           }
