@@ -30,13 +30,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Recycle, Loader2 } from "lucide-react";
 
@@ -44,9 +37,6 @@ const signUpSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   email: z.string().email("Invalid email address."),
   password: z.string().min(6, "Password must be at least 6 characters."),
-  role: z.enum(["Admin", "Data Collector"], {
-    required_error: "Please select a role.",
-  }),
 });
 
 const loginSchema = z.object({
@@ -66,7 +56,7 @@ export default function AuthPage() {
 
   const signUpForm = useForm<z.infer<typeof signUpSchema>>({
     resolver: zodResolver(signUpSchema),
-    defaultValues: { name: "", email: "", password: "", role: "Data Collector" },
+    defaultValues: { name: "", email: "", password: "" },
   });
 
   const handleLogin = async (values: z.infer<typeof loginSchema>) => {
@@ -95,11 +85,11 @@ export default function AuthPage() {
       );
       const user = userCredential.user;
       
-      // Store user info in Firestore
+      // Store user info in Firestore, defaulting to "Data Collector" role
       await setDoc(doc(db, "users", user.uid), {
         name: values.name,
         email: values.email,
-        role: values.role,
+        role: "Data Collector",
       });
 
       // The redirect is handled by the AuthProvider
@@ -229,27 +219,6 @@ export default function AuthPage() {
                                         <Input type="password" placeholder="••••••••" {...field} />
                                     </FormControl>
                                     <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={signUpForm.control}
-                            name="role"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Role</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select a role" />
-                                    </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                    <SelectItem value="Data Collector">Data Collector</SelectItem>
-                                    <SelectItem value="Admin">Admin</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
                                 </FormItem>
                             )}
                         />
