@@ -77,14 +77,7 @@ export function DataEntryForm() {
         description: "Waste collection record has been saved to Firebase.",
         className: "bg-primary text-primary-foreground",
       });
-      form.reset({
-        wasteType: undefined,
-        quantity: undefined,
-        location: undefined,
-        date: new Date(),
-        collectorId: "C001",
-        truckId: "",
-      });
+      form.reset();
     } catch (error: any) {
       console.error("Error adding document: ", error);
       let description = "Failed to save record. Please make sure your Firebase project is set up correctly.";
