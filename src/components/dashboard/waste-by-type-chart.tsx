@@ -17,12 +17,12 @@ const chartConfig = {
   value: {
     label: "Kilograms",
   },
-  Organic: { label: "Organic", color: "hsl(var(--chart-1))" },
-  Plastic: { label: "Plastic", color: "hsl(var(--chart-2))" },
-  Paper: { label: "Paper", color: "hsl(var(--chart-3))" },
-  "E-Waste": { label: "E-Waste", color: "hsl(var(--chart-4))" },
-  Glass: { label: "Glass", color: "hsl(var(--chart-5))" },
-  Metal: { label: "Metal", color: "hsl(var(--chart-6))" },
+  Organic: { label: "Organic", color: "var(--chart-1)" },
+  Plastic: { label: "Plastic", color: "var(--chart-2)" },
+  Paper: { label: "Paper", color: "var(--chart-3)" },
+  "E-Waste": { label: "E-Waste", color: "var(--chart-4)" },
+  Glass: { label: "Glass", color: "var(--chart-5)" },
+  Metal: { label: "Metal", color: "var(--chart-6)" },
 } satisfies ChartConfig;
 
 
