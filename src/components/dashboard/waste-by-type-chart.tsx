@@ -11,11 +11,11 @@ import {
 import { ChartContainer, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 
 const data = [
-  { name: "Organic", value: 400, color: "hsl(var(--chart-1))" },
-  { name: "Plastic", value: 300, color: "hsl(var(--chart-2))" },
-  { name: "Paper", value: 200, color: "hsl(var(--chart-3))" },
-  { name: "E-Waste", value: 100, color: "hsl(var(--chart-4))" },
-  { name: "Other", value: 150, color: "hsl(var(--chart-5))" },
+  { name: "Organic", value: 400, color: "hsl(120, 60%, 40%)" },
+  { name: "Plastic", value: 300, color: "hsl(210, 80%, 50%)" },
+  { name: "Paper", value: 200, color: "hsl(30, 40%, 50%)" },
+  { name: "E-Waste", value: 100, color: "hsl(220, 15%, 40%)" },
+  { name: "Other", value: 150, color: "hsl(25, 90%, 55%)" },
 ];
 
 const chartConfig = {
@@ -24,23 +24,23 @@ const chartConfig = {
   },
   Organic: {
     label: "Organic",
-    color: "hsl(var(--chart-1))",
+    color: "hsl(120, 60%, 40%)",
   },
   Plastic: {
     label: "Plastic",
-    color: "hsl(var(--chart-2))",
+    color: "hsl(210, 80%, 50%)",
   },
   Paper: {
     label: "Paper",
-    color: "hsl(var(--chart-3))",
+    color: "hsl(30, 40%, 50%)",
   },
   "E-Waste": {
     label: "E-Waste",
-    color: "hsl(var(--chart-4))",
+    color: "hsl(220, 15%, 40%)",
   },
   Other: {
     label: "Other",
-    color: "hsl(var(--chart-5))",
+    color: "hsl(25, 90%, 55%)",
   },
 } satisfies ChartConfig;
 
