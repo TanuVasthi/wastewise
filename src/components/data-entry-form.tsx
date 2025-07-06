@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -27,12 +26,15 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { locations, wasteTypes } from "@/lib/data";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useState } from "react";
+import { db } from "@/lib/firebase";
+import { collection, addDoc } from "firebase/firestore";
 
 const formSchema = z.object({
   wasteType: z.enum(wasteTypes, {
@@ -51,25 +53,48 @@ const formSchema = z.object({
 
 export function DataEntryForm() {
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      wasteType: "",
-      quantity: "",
-      location: "",
+      wasteType: undefined,
+      quantity: undefined,
+      location: undefined,
+      date: new Date(),
       collectorId: "C001", // Should be dynamically set in a real app
       truckId: "",
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    toast({
-      title: "Success!",
-      description: "Waste collection record has been saved.",
-      className: "bg-primary text-primary-foreground",
-    });
-    form.reset();
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSubmitting(true);
+    try {
+      await addDoc(collection(db, "waste-records"), values);
+      
+      toast({
+        title: "Success!",
+        description: "Waste collection record has been saved to Firebase.",
+        className: "bg-primary text-primary-foreground",
+      });
+      form.reset({
+        wasteType: undefined,
+        quantity: undefined,
+        location: undefined,
+        date: new Date(),
+        collectorId: "C001",
+        truckId: "",
+      });
+    } catch (error) {
+      console.error("Error adding document: ", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to save record. Please make sure your Firebase keys in .env are correct.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -113,7 +138,7 @@ export function DataEntryForm() {
                   <FormItem>
                     <FormLabel>Quantity (kg)</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="e.g. 50" {...field} />
+                      <Input type="number" placeholder="e.g. 50" {...field} value={field.value ?? ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -209,7 +234,16 @@ export function DataEntryForm() {
                 )}
               />
             </div>
-            <Button type="submit" size="lg">Submit Record</Button>
+            <Button type="submit" size="lg" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Submit Record"
+              )}
+            </Button>
           </form>
         </Form>
       </CardContent>
