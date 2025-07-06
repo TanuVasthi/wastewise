@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,16 +15,65 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { mockUsers, mockBins, mockWasteRecords } from "@/lib/data";
-import { PlusCircle, FileDown, Trash2 } from "lucide-react";
+import { mockUsers, mockBins, type WasteRecord } from "@/lib/data";
+import { PlusCircle, FileDown, Trash2, AlertTriangle } from "lucide-react";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
 
 export default function AdminPage() {
+    const [wasteRecords, setWasteRecords] = useState<WasteRecord[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchWasteRecords = async () => {
+          try {
+            const recordsQuery = query(collection(db, "waste-records"), orderBy("date", "desc"));
+            const querySnapshot = await getDocs(recordsQuery);
+            const records = querySnapshot.docs.map((doc) => {
+              const data = doc.data();
+              return {
+                id: doc.id,
+                ...data,
+                date: data.date.toDate(),
+              } as WasteRecord;
+            });
+            setWasteRecords(records);
+          } catch (err: any) {
+            console.error(err);
+            setError("Failed to fetch waste data. Please ensure your Firebase project is set up correctly and you have permission to read the data.");
+          } finally {
+            setLoading(false);
+          }
+        };
+    
+        fetchWasteRecords();
+      }, []);
 
     const handleExport = () => {
-        const headers = Object.keys(mockWasteRecords[0]).join(',');
-        const rows = mockWasteRecords.map(row => 
-            Object.values(row).map(val => (val instanceof Date) ? val.toISOString() : val).join(',')
-        );
+        if (wasteRecords.length === 0) {
+            alert("No data available to export.");
+            return;
+        }
+
+        const headers = ["ID", "Waste Type", "Quantity (kg)", "Location", "Date", "Collector ID", "Truck ID"].join(',');
+        
+        const rows = wasteRecords.map(row => {
+            const rowData = [
+                row.id,
+                row.wasteType,
+                row.quantity,
+                `"${(row.location || '').replace(/"/g, '""')}"`,
+                row.date.toISOString(),
+                row.collectorId,
+                row.truckId || ''
+            ];
+            return rowData.join(',');
+        });
+
         const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].join('\n');
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
@@ -86,13 +136,64 @@ export default function AdminPage() {
           <Card>
             <CardHeader>
               <CardTitle>Export Data</CardTitle>
-              <CardDescription>Download waste collection records as a CSV file.</CardDescription>
+              <CardDescription>View and download waste collection records as a CSV file.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p>Click the button below to download all waste records.</p>
-              <Button onClick={handleExport}>
-                <FileDown className="mr-2 h-4 w-4" /> Export as CSV
-              </Button>
+              {loading && (
+                <div className="space-y-2">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                </div>
+              )}
+              {error && (
+                <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Error Loading Data</AlertTitle>
+                    <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              {!loading && !error && (
+                <>
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Waste Type</TableHead>
+                          <TableHead>Quantity (kg)</TableHead>
+                          <TableHead>Location</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Collector</TableHead>
+                          <TableHead>Truck ID</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {wasteRecords.length > 0 ? (
+                          wasteRecords.map((record) => (
+                            <TableRow key={record.id}>
+                              <TableCell className="font-medium">{record.wasteType}</TableCell>
+                              <TableCell>{record.quantity}</TableCell>
+                              <TableCell>{record.location}</TableCell>
+                              <TableCell>{record.date.toLocaleDateString()}</TableCell>
+                              <TableCell>{record.collectorId}</TableCell>
+                              <TableCell>{record.truckId || "N/A"}</TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={6} className="h-24 text-center">
+                              No records found.
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <Button onClick={handleExport} disabled={wasteRecords.length === 0 || loading}>
+                    <FileDown className="mr-2 h-4 w-4" /> Export as CSV
+                  </Button>
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
