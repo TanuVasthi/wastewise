@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -67,7 +68,7 @@ export function AiSuggestions({ records }: AiSuggestionsProps) {
             <CardTitle>AI-Powered Zone Suggestions</CardTitle>
         </div>
         <CardDescription>
-          Analyze your collected data to identify zones needing more bins and optimize
+          Analyze recent waste data (last 6 months) to identify zones needing more bins and optimize
           resource allocation.
         </CardDescription>
       </CardHeader>

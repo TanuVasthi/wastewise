@@ -1,7 +1,8 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { WasteRecord } from "@/lib/data";
 
@@ -14,7 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import { Trash2, Scale, Truck, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { isSameDay, subDays } from "date-fns";
+import { isSameDay, subDays, subMonths } from "date-fns";
 
 export default function DashboardPage() {
   const [wasteRecords, setWasteRecords] = useState<WasteRecord[]>([]);
@@ -24,7 +25,12 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchWasteRecords = async () => {
       try {
-        const recordsQuery = query(collection(db, "waste-records"), orderBy("date", "desc"));
+        const sixMonthsAgo = subMonths(new Date(), 6);
+        const recordsQuery = query(
+            collection(db, "waste-records"), 
+            orderBy("date", "desc"),
+            where("date", ">=", sixMonthsAgo)
+        );
         const querySnapshot = await getDocs(recordsQuery);
         const records = querySnapshot.docs.map((doc) => {
           const data = doc.data();

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMemo } from "react";
@@ -50,7 +51,7 @@ export function WasteByTypeChart({ records }: WasteByTypeChartProps) {
     <Card>
       <CardHeader>
         <CardTitle>Waste Type Breakdown</CardTitle>
-        <CardDescription>Based on all collected data</CardDescription>
+        <CardDescription>Based on data from the last 6 months</CardDescription>
       </CardHeader>
       <CardContent>
         {data.length > 0 ? (

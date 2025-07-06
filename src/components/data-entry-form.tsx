@@ -31,7 +31,13 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { locations, wasteTypes } from "@/lib/data";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { useState } from "react";
 import { db } from "@/lib/firebase";
 import { collection, addDoc } from "firebase/firestore";
@@ -43,7 +49,9 @@ const formSchema = z.object({
   quantity: z.coerce
     .number({ required_error: "Please enter a quantity." })
     .positive({ message: "Quantity must be positive." }),
-  location: z.string({ required_error: "Please select a location." }).min(1, "Please select a location."),
+  location: z
+    .string({ required_error: "Please select a location." })
+    .min(1, "Please select a location."),
   date: z.date({
     required_error: "A date of collection is required.",
   }),
@@ -52,14 +60,13 @@ const formSchema = z.object({
 });
 
 const defaultFormValues = {
-    wasteType: undefined,
-    quantity: undefined,
-    location: undefined,
-    date: new Date(),
-    collectorId: "C001", // Should be dynamically set in a real app
-    truckId: "",
+  wasteType: undefined,
+  quantity: undefined,
+  location: undefined,
+  date: new Date(),
+  collectorId: "C001", // Should be dynamically set in a real app
+  truckId: "",
 };
-
 
 export function DataEntryForm() {
   const { toast } = useToast();
@@ -74,26 +81,26 @@ export function DataEntryForm() {
     setIsSubmitting(true);
     try {
       await addDoc(collection(db, "waste-records"), values);
-      
+
       toast({
         title: "Success!",
         description: "Waste collection record has been saved.",
       });
 
       form.reset(defaultFormValues);
-      form.setValue('date', new Date());
-
+      form.setValue("date", new Date());
     } catch (error) {
       console.error("Firebase write error:", error);
-      
+
       let description = "An unexpected error occurred. Please try again.";
-      if (error instanceof Error && 'code' in error) {
+      if (error instanceof Error && "code" in error) {
         const firebaseError = error as { code: string };
-        if (firebaseError.code === 'permission-denied') {
-            description = "Submission failed. Please check your Firestore security rules to allow write access."
+        if (firebaseError.code === "permission-denied") {
+          description =
+            "Submission failed. Please check your Firestore security rules to allow write access.";
         }
       }
-      
+
       toast({
         variant: "destructive",
         title: "Error Saving Record",
@@ -108,7 +115,9 @@ export function DataEntryForm() {
     <Card>
       <CardHeader>
         <CardTitle>Waste Collection Data Entry</CardTitle>
-        <CardDescription>Fill in the details below to record a new waste collection.</CardDescription>
+        <CardDescription>
+          Fill in the details below to record a new waste collection.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -120,7 +129,10 @@ export function DataEntryForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Waste Type</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || ""}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a waste type" />
@@ -145,7 +157,12 @@ export function DataEntryForm() {
                   <FormItem>
                     <FormLabel>Quantity (kg)</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="e.g. 50" {...field} value={field.value ?? ""} />
+                      <Input
+                        type="number"
+                        placeholder="e.g. 50"
+                        {...field}
+                        value={field.value ?? ""}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -157,15 +174,20 @@ export function DataEntryForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Location (Zone/Ward)</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || ""}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a location" />
-                        </Trigger>
+                        </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {locations.map((loc) => (
-                            <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                          <SelectItem key={loc} value={loc}>
+                            {loc}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -204,7 +226,8 @@ export function DataEntryForm() {
                           selected={field.value}
                           onSelect={field.onChange}
                           disabled={(date) =>
-                            date > new Date() || date < new Date("2000-01-01")
+                            date > new Date() ||
+                            date < new Date("2000-01-01")
                           }
                           initialFocus
                         />
