@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import { Bar, BarChart, XAxis, YAxis, Tooltip } from "recharts";
 import {
   Card,
@@ -10,6 +10,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ChartContainer, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import { format, subDays, isSameDay } from "date-fns";
+import type { WasteRecord } from "@/lib/data";
+
 
 const chartConfig = {
   total: {
@@ -18,28 +21,27 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function WasteOverTimeChart() {
-  const [data, setData] = useState([
-    { date: "Mon", total: 0 },
-    { date: "Tue", total: 0 },
-    { date: "Wed", total: 0 },
-    { date: "Thu", total: 0 },
-    { date: "Fri", total: 0 },
-    { date: "Sat", total: 0 },
-    { date: "Sun", total: 0 },
-  ]);
+interface WasteOverTimeChartProps {
+    records: WasteRecord[];
+}
 
-  useEffect(() => {
-    setData([
-      { date: "Mon", total: Math.floor(Math.random() * 200) + 100 },
-      { date: "Tue", total: Math.floor(Math.random() * 200) + 100 },
-      { date: "Wed", total: Math.floor(Math.random() * 200) + 100 },
-      { date: "Thu", total: Math.floor(Math.random() * 200) + 100 },
-      { date: "Fri", total: Math.floor(Math.random() * 200) + 100 },
-      { date: "Sat", total: Math.floor(Math.random() * 200) + 100 },
-      { date: "Sun", total: Math.floor(Math.random() * 200) + 100 },
-    ]);
-  }, []);
+export function WasteOverTimeChart({ records }: WasteOverTimeChartProps) {
+  const data = useMemo(() => {
+    const last7Days = Array.from({ length: 7 }, (_, i) => subDays(new Date(), i)).reverse();
+    
+    const aggregatedData = last7Days.map(date => {
+        const dayOfWeek = format(date, "eee");
+        
+        const total = records
+            .filter(record => isSameDay(new Date(record.date), date))
+            .reduce((sum, record) => sum + record.quantity, 0);
+
+        return { date: dayOfWeek, total };
+    });
+
+    return aggregatedData;
+  }, [records]);
+
 
   return (
     <Card>
@@ -48,26 +50,32 @@ export function WasteOverTimeChart() {
         <CardDescription>Last 7 Days</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-[300px]">
-          <BarChart data={data}>
-            <XAxis
-              dataKey="date"
-              stroke="#888888"
-              fontSize={12}
-              tickLine={false}
-              axisLine={false}
-            />
-            <YAxis
-              stroke="#888888"
-              fontSize={12}
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(value) => `${value} kg`}
-            />
-             <Tooltip cursor={{ fill: 'hsla(var(--muted))' }} content={<ChartTooltipContent />} />
-            <Bar dataKey="total" fill="var(--color-total)" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ChartContainer>
+        {records.length > 0 ? (
+            <ChartContainer config={chartConfig} className="h-[300px]">
+                <BarChart data={data}>
+                    <XAxis
+                    dataKey="date"
+                    stroke="#888888"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    />
+                    <YAxis
+                    stroke="#888888"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) => `${value} kg`}
+                    />
+                    <Tooltip cursor={{ fill: 'hsla(var(--muted))' }} content={<ChartTooltipContent />} />
+                    <Bar dataKey="total" fill="var(--color-total)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+            </ChartContainer>
+        ) : (
+             <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                No data available to display chart.
+            </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react";
 import { Line, LineChart, XAxis, YAxis, Tooltip, Legend } from "recharts"
 import {
     Card,
@@ -9,64 +10,83 @@ import {
     CardTitle,
   } from "@/components/ui/card"
 import { ChartContainer, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
+import type { WasteRecord } from "@/lib/data";
+import { format, subMonths, getMonth, getYear, startOfMonth } from "date-fns";
   
-  const data = [
-    { name: 'Jan', "Zone A": 400, "Zone B": 240, "Zone C": 180 },
-    { name: 'Feb', "Zone A": 300, "Zone B": 139, "Zone C": 220 },
-    { name: 'Mar', "Zone A": 200, "Zone B": 980, "Zone C": 350 },
-    { name: 'Apr', "Zone A": 278, "Zone B": 390, "Zone C": 280 },
-    { name: 'May', "Zone A": 189, "Zone B": 480, "Zone C": 410 },
-    { name: 'Jun', "Zone A": 239, "Zone B": 380, "Zone C": 250 },
-  ]
-  
-  const chartConfig = {
-    "Zone A": {
-      label: "Zone A",
-      color: "hsl(var(--chart-4))",
-    },
-    "Zone B": {
-      label: "Zone B",
-      color: "hsl(var(--chart-2))",
-    },
-    "Zone C": {
-      label: "Zone C",
-      color: "hsl(var(--chart-3))",
-    },
+const chartConfig = {
+    ZoneA: { label: "Zone A", color: "hsl(var(--chart-1))" },
+    ZoneB: { label: "Zone B", color: "hsl(var(--chart-2))" },
+    ZoneC: { label: "Zone C", color: "hsl(var(--chart-3))" },
+    ZoneD: { label: "Zone D", color: "hsl(var(--chart-4))" },
+    ZoneE: { label: "Zone E", color: "hsl(var(--chart-5))" },
   } satisfies ChartConfig;
 
-  export function ZoneTrendsChart() {
+interface ZoneTrendsChartProps {
+    records: WasteRecord[];
+}
+
+export function ZoneTrendsChart({ records }: ZoneTrendsChartProps) {
+    const data = useMemo(() => {
+        if (!records || records.length === 0) return [];
+
+        const sixMonthsAgo = startOfMonth(subMonths(new Date(), 5));
+
+        const filteredRecords = records.filter(r => new Date(r.date) >= sixMonthsAgo);
+
+        const monthlyData = filteredRecords.reduce((acc, record) => {
+            const monthKey = format(new Date(record.date), "yyyy-MM");
+            if (!acc[monthKey]) {
+                acc[monthKey] = { name: format(new Date(record.date), "MMM") };
+            }
+            
+            const zoneKey = record.location.replace(" ", "");
+            acc[monthKey][zoneKey] = (acc[monthKey][zoneKey] || 0) + record.quantity;
+            return acc;
+        }, {} as Record<string, any>);
+
+        const sortedMonths = Object.keys(monthlyData).sort();
+        
+        return sortedMonths.map(monthKey => monthlyData[monthKey]);
+
+    }, [records]);
+
     return (
         <Card>
-        <CardHeader>
-          <CardTitle>Zone-wise Waste Trends</CardTitle>
-          <CardDescription>Last 6 Months</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ChartContainer config={chartConfig} className="h-[300px]">
-            <LineChart data={data}>
-              <XAxis
-                dataKey="name"
-                stroke="#888888"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                stroke="#888888"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(value) => `${value} kg`}
-              />
-              <Tooltip content={<ChartTooltipContent />} />
-              <Legend />
-              <Line type="monotone" dataKey="Zone A" stroke="var(--color-Zone A)" />
-              <Line type="monotone" dataKey="Zone B" stroke="var(--color-Zone B)" />
-              <Line type="monotone" dataKey="Zone C" stroke="var(--color-Zone C)" />
-            </LineChart>
-          </ChartContainer>
-        </CardContent>
-      </Card>
+            <CardHeader>
+                <CardTitle>Zone-wise Waste Trends</CardTitle>
+                <CardDescription>Last 6 Months</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {data.length > 0 ? (
+                <ChartContainer config={chartConfig} className="h-[300px]">
+                    <LineChart data={data}>
+                        <XAxis
+                            dataKey="name"
+                            stroke="#888888"
+                            fontSize={12}
+                            tickLine={false}
+                            axisLine={false}
+                        />
+                        <YAxis
+                            stroke="#888888"
+                            fontSize={12}
+                            tickLine={false}
+                            axisLine={false}
+                            tickFormatter={(value) => `${value} kg`}
+                        />
+                        <Tooltip content={<ChartTooltipContent />} />
+                        <Legend />
+                        {Object.entries(chartConfig).map(([zoneKey, config]) => (
+                            <Line key={zoneKey} type="monotone" dataKey={zoneKey} name={config.label} stroke={config.color} />
+                        ))}
+                    </LineChart>
+                </ChartContainer>
+                ) : (
+                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                    No data available to display chart.
+                </div>
+                )}
+            </CardContent>
+        </Card>
     )
-  }
-  
+}

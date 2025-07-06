@@ -16,9 +16,13 @@ import {
   suggestBinLocations,
   type SuggestBinLocationsOutput,
 } from "@/ai/flows/suggest-bin-locations";
-import { mockWasteRecords } from "@/lib/data";
+import type { WasteRecord } from "@/lib/data";
 
-export function AiSuggestions() {
+interface AiSuggestionsProps {
+    records: WasteRecord[];
+}
+
+export function AiSuggestions({ records }: AiSuggestionsProps) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SuggestBinLocationsOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -28,10 +32,14 @@ export function AiSuggestions() {
     setError(null);
     setResult(null);
 
-    // For demonstration, we'll stringify our mock data.
-    // In a real app, you might fetch and format more complex data.
+    if (records.length === 0) {
+        setError("No waste data available to analyze. Please add some records first.");
+        setLoading(false);
+        return;
+    }
+
     const historicalData = JSON.stringify(
-      mockWasteRecords.map((r) => ({
+      records.map((r) => ({
         zone: r.location,
         type: r.wasteType,
         qty: r.quantity,
@@ -45,7 +53,7 @@ export function AiSuggestions() {
       const output = await suggestBinLocations({ historicalData });
       setResult(output);
     } catch (e: any) {
-      setError(e.message || "An unknown error occurred.");
+      setError(e.message || "An unknown error occurred during AI analysis.");
     } finally {
       setLoading(false);
     }
@@ -59,7 +67,7 @@ export function AiSuggestions() {
             <CardTitle>AI-Powered Zone Suggestions</CardTitle>
         </div>
         <CardDescription>
-          Analyze historical data to identify zones needing more bins and optimize
+          Analyze your collected data to identify zones needing more bins and optimize
           resource allocation.
         </CardDescription>
       </CardHeader>
@@ -100,9 +108,14 @@ export function AiSuggestions() {
             </AlertDescription>
           </Alert>
         )}
+        {!loading && !result && !error && (
+            <div className="py-8 text-center text-muted-foreground">
+                <p>Click the button to get AI suggestions based on your data.</p>
+            </div>
+        )}
       </CardContent>
       <CardFooter>
-        <Button onClick={handleAnalyze} disabled={loading}>
+        <Button onClick={handleAnalyze} disabled={loading || records.length === 0}>
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
